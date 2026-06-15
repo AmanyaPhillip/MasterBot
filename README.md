@@ -2,6 +2,19 @@
 
 A Telegram bot that acts as a remote process manager for your local Node.js projects. Start, stop, restart, schedule, and monitor apps on your machine straight from Telegram.
 
+> **Windows only.** Uses `taskkill` / `tasklist` internally. Linux/macOS users will need to swap those calls with `kill` / `ps`.
+
+## Demo
+
+https://github.com/phllipamanya/MasterBot/blob/main/demo.mp4
+
+## Prerequisites
+
+- **Node.js** v18 or higher
+- **Windows** (see note above)
+- A Telegram bot token — create one via [@BotFather](https://t.me/BotFather) (`/newbot`)
+- Your numeric Telegram user ID — get it from [@userinfobot](https://t.me/userinfobot)
+
 ## Features
 
 - Start / stop / restart configured projects from an inline Telegram keyboard
@@ -57,8 +70,8 @@ stop-background.js # Cleanup utility: kills managed/orphaned processes
 
 ## Notes
 
-- Windows-oriented (uses `taskkill` / `tasklist`); adapt for Linux/macOS by swapping the process-kill calls.
 - Spawned children get a sanitized environment so they load their own `.env` rather than inheriting the bot's secrets.
+- Never commit your `.env` file — it contains your bot token. Add it to `.gitignore`.
 
 ## License
 
