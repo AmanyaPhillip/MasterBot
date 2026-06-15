@@ -6,7 +6,7 @@ A Telegram bot that acts as a remote process manager for your local Node.js proj
 
 ## Demo
 
-https://github.com/phllipamanya/MasterBot/blob/main/demo.mp4
+[![Demo](https://img.youtube.com/vi/kNCBs4d-7hI/0.jpg)](https://youtube.com/shorts/kNCBs4d-7hI)
 
 ## Prerequisites
 
