@@ -73,6 +73,10 @@ stop-background.js # Cleanup utility: kills managed/orphaned processes
 - Spawned children get a sanitized environment so they load their own `.env` rather than inheriting the bot's secrets.
 - Never commit your `.env` file — it contains your bot token. Add it to `.gitignore`.
 
+## Security
+
+Secrets are stored in a git-ignored `.env` file and are never committed; project config (`config.json`) and runtime state are git-ignored too. Repository history has been audited and contains no exposed credentials. To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT
