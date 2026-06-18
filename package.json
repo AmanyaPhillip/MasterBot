@@ -1,10 +1,13 @@
 {
   "name": "masterbot",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "stop": "node stop-background.js"
+    "start": "node src/index.js",
+    "stop": "node scripts/stop-background.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "keywords": ["telegram-bot", "process-manager", "node-cron", "devops"],
   "author": "Phillip Amanya",
