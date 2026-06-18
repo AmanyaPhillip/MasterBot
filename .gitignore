@@ -9,3 +9,9 @@ schedules.json
 .DS_Store
 active_pids.json
 .agents/
+
+# Runtime state now lives in data/ (created at startup)
+data/
+
+# Demo video is hosted on YouTube, not committed to the repo
+*.mp4
