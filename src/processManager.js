@@ -2,7 +2,11 @@ const { spawn } = require('child_process');
 const pidusage = require('pidusage');
 
 const fs = require('fs');
-const PID_FILE = './active_pids.json';
+const path = require('path');
+
+const DATA_DIR = path.join(__dirname, '..', 'data');
+fs.mkdirSync(DATA_DIR, { recursive: true });
+const PID_FILE = path.join(DATA_DIR, 'active_pids.json');
 
 class ProcessManager {
     constructor() {
@@ -132,14 +136,14 @@ class ProcessManager {
 
         child.on('close', (code) => {
             if (bot && chatId) {
-                bot.sendMessage(chatId, `⚠️ Process *${project.name}* exited with code ${code}.`, { parse_mode: 'Markdown' });
+                bot.sendMessage(chatId, `⚠️ Process *${project.name}* exited with code ${code}.`, { parse_mode: 'Markdown' }).catch(() => {});
             }
             this.processes[project.id].process = null;
             this._removePid(project.id);
 
             if (this.processes[project.id].autoRestart) {
                 if (bot && chatId) {
-                    bot.sendMessage(chatId, `🔄 Auto-restarting *${project.name}*...`, { parse_mode: 'Markdown' });
+                    bot.sendMessage(chatId, `🔄 Auto-restarting *${project.name}*...`, { parse_mode: 'Markdown' }).catch(() => {});
                 }
                 setTimeout(() => this.startProcess(project, bot, chatId), 2000); // Wait 2s before restarting
             }
