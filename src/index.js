@@ -1,13 +1,28 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
-const config = require('./config.json');
+const config = require('../config.json');
 const setupBot = require('./botHandlers');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const adminId = parseInt(process.env.ADMIN_ID);
+const adminId = Number(process.env.ADMIN_ID);
 
 if (!token) {
-    console.error("Please set TELEGRAM_BOT_TOKEN in .env file.");
+    console.error("FATAL: TELEGRAM_BOT_TOKEN is not set in .env");
+    process.exit(1);
+}
+
+if (!Number.isInteger(adminId) || adminId <= 0) {
+    console.error("FATAL: ADMIN_ID must be your numeric Telegram user id (a positive integer)");
+    process.exit(1);
+}
+
+// Project ids are used as a ':'-delimited callback-data segment, so they must not contain ':'
+const badIds = (config.projects || []).filter(p => !p.id || String(p.id).includes(':'));
+if (badIds.length) {
+    console.error(
+        "FATAL: every project needs a non-empty id with no ':' character. Offending entries:",
+        badIds.map(p => p.name || JSON.stringify(p))
+    );
     process.exit(1);
 }
 
