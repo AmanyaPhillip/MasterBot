@@ -1,6 +1,6 @@
 const processManager = require('./processManager');
 const scheduler = require('./scheduler');
-const config = require('./config.json');
+const config = require('../config.json');
 const os = require('os');
 
 const MAIN_KEYBOARD = {
@@ -23,7 +23,7 @@ module.exports = function setupBot(bot) {
 
     // Middleware to check admin
     const isAdmin = (msg) => {
-        return msg.from.id === config.adminId || config.adminId === 0;
+        return Boolean(msg.from) && msg.from.id === config.adminId;
     };
 
     bot.onText(/\/start/, (msg) => {
@@ -40,7 +40,7 @@ module.exports = function setupBot(bot) {
             let options = {
                 reply_markup: {
                     inline_keyboard: config.projects.map(p => {
-                        return [{ text: `📂 ${p.name}`, callback_data: `menu_${p.id}` }];
+                        return [{ text: `📂 ${p.name}`, callback_data: `menu:${p.id}` }];
                     })
                 }
             };
@@ -92,7 +92,7 @@ module.exports = function setupBot(bot) {
             let options = {
                 reply_markup: {
                     inline_keyboard: config.projects.map(p => {
-                        return [{ text: `📅 ${p.name}`, callback_data: `sched_${p.id}` }];
+                        return [{ text: `📅 ${p.name}`, callback_data: `sched:${p.id}` }];
                     })
                 }
             };
@@ -108,8 +108,10 @@ module.exports = function setupBot(bot) {
         const chatId = query.message.chat.id;
         const data = query.data;
 
-        const [action, ...idParts] = data.split('_');
-        const projectId = idParts.join('_');
+        // Callback data is ':'-delimited so underscores in project ids are safe.
+        // Format is `action:projectId` or `schedset:freq:projectId`; the project id is always the last segment.
+        const [action, ...idParts] = data.split(':');
+        const projectId = idParts[idParts.length - 1];
 
         const project = config.projects.find(p => p.id === projectId);
         if (!project) return bot.answerCallbackQuery(query.id);
@@ -182,13 +184,9 @@ module.exports = function setupBot(bot) {
             }
             else if (action === 'schedset') {
                 const freq = idParts[0];
-                const projId = idParts.slice(1).join('_');
-                const proj = config.projects.find(p => p.id === projId);
-                if (proj) {
-                    scheduler.scheduleJob(projId, freq, bot);
-                    bot.answerCallbackQuery(query.id, { text: `Scheduled: ${freq}` });
-                    bot.sendMessage(chatId, `✅ *${proj.name}* scheduled: **${freq}** (6:00 AM)`, { parse_mode: 'Markdown' });
-                }
+                scheduler.scheduleJob(projectId, freq, bot);
+                bot.answerCallbackQuery(query.id, { text: `Scheduled: ${freq}` });
+                bot.sendMessage(chatId, `✅ *${project.name}* scheduled: **${freq}** (6:00 AM)`, { parse_mode: 'Markdown' });
             }
             else if (action === 'scheddel') {
                 scheduler.removeSchedule(projectId);
@@ -238,11 +236,11 @@ async function sendProjectStatus(bot, chatId, project) {
     const toggleAction = isRunning ? 'stop' : 'start';
 
     const keyboard = [
-        [{ text: toggleLabel, callback_data: `${toggleAction}_${project.id}` }, { text: '🔄 Restart', callback_data: `restart_${project.id}` }],
-        [{ text: '📄 View Output', callback_data: `logs_${project.id}` }, { text: '🧹 Clear Logs', callback_data: `clear_${project.id}` }],
-        [{ text: `🔄 Auto-Restart: ${auto}`, callback_data: `autores_${project.id}` }],
-        [{ text: `📝 Log Tailing: ${tail}`, callback_data: `tail_${project.id}` }],
-        [{ text: '⬇️ Git Pull', callback_data: `gitpull_${project.id}` }]
+        [{ text: toggleLabel, callback_data: `${toggleAction}:${project.id}` }, { text: '🔄 Restart', callback_data: `restart:${project.id}` }],
+        [{ text: '📄 View Output', callback_data: `logs:${project.id}` }, { text: '🧹 Clear Logs', callback_data: `clear:${project.id}` }],
+        [{ text: `🔄 Auto-Restart: ${auto}`, callback_data: `autores:${project.id}` }],
+        [{ text: `📝 Log Tailing: ${tail}`, callback_data: `tail:${project.id}` }],
+        [{ text: '⬇️ Git Pull', callback_data: `gitpull:${project.id}` }]
     ];
 
     bot.sendMessage(chatId, msg, {
@@ -255,10 +253,10 @@ async function sendProjectStatus(bot, chatId, project) {
 
 function sendScheduleOptions(bot, chatId, project) {
     const keyboard = [
-        [{ text: '🌅 Daily', callback_data: `schedset_daily_${project.id}` }, { text: '📅 Weekly', callback_data: `schedset_weekly_${project.id}` }],
-        [{ text: '🗓 Biweekly', callback_data: `schedset_biweekly_${project.id}` }, { text: '🌚 Monthly', callback_data: `schedset_monthly_${project.id}` }],
-        [{ text: '🔍 View Current', callback_data: `schedview_${project.id}` }],
-        [{ text: '🗑 Remove Schedule', callback_data: `scheddel_${project.id}` }]
+        [{ text: '🌅 Daily', callback_data: `schedset:daily:${project.id}` }, { text: '📅 Weekly', callback_data: `schedset:weekly:${project.id}` }],
+        [{ text: '🗓 Biweekly', callback_data: `schedset:biweekly:${project.id}` }, { text: '🌚 Monthly', callback_data: `schedset:monthly:${project.id}` }],
+        [{ text: '🔍 View Current', callback_data: `schedview:${project.id}` }],
+        [{ text: '🗑 Remove Schedule', callback_data: `scheddel:${project.id}` }]
     ];
 
     bot.sendMessage(chatId, `Select frequency for *${project.name}*:`, {
